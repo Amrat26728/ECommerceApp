@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Order {
+public class DeliveryOrder {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

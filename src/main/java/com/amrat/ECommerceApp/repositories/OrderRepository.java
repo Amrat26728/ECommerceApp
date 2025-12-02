@@ -1,7 +1,7 @@
 package com.amrat.ECommerceApp.repositories;
 
-import com.amrat.ECommerceApp.entities.Order;
+import com.amrat.ECommerceApp.entities.DeliveryOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<DeliveryOrder, Long> {
 }
