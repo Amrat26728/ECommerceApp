@@ -18,7 +18,7 @@ public class Product {
     private Long id;
 
     @ManyToOne
-    private Seller sellerId;
+    private Vendor vendorId;
 
     private String name;
 

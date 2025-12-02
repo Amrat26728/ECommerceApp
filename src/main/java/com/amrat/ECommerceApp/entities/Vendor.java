@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Seller {
+public class Vendor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
