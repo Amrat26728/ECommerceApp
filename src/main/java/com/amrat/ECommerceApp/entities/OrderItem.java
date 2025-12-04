@@ -15,7 +15,7 @@ public class OrderItem {
     private Long id;
 
     @ManyToOne
-    private DeliveryOrder orderId;
+    private Order orderId;
 
     @OneToOne
     private Product productId;
