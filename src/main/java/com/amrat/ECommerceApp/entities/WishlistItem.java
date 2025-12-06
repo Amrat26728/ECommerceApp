@@ -14,7 +14,7 @@ public class WishlistItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Wishlist wishlist;
 
     @OneToOne

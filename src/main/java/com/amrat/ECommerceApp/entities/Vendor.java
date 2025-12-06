@@ -18,7 +18,7 @@ public class Vendor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     private User user;
 

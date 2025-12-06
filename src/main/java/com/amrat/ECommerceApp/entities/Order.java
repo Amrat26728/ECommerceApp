@@ -19,8 +19,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Buyer buyerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Buyer buyer;
 
     @ManyToOne
     private Vendor vendorId;

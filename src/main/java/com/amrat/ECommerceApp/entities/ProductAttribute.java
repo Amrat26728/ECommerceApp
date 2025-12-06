@@ -14,8 +14,8 @@ public class ProductAttribute {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Product productId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Product product;
 
     private String attributeName;
 

@@ -19,7 +19,7 @@ public class VerificationToken {
     @Column(nullable = false, unique = true)
     private String token;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 

@@ -17,8 +17,8 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Vendor vendorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Vendor vendor;
 
     private String name;
 
@@ -28,7 +28,7 @@ public class Product {
 
     private Long stock;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Category category;
 
     private String imageUrl;

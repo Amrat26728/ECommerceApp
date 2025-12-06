@@ -14,8 +14,8 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private Order orderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Order order;
 
     @OneToOne
     private Product productId;
