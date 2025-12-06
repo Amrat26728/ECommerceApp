@@ -22,6 +22,8 @@ public class Vendor {
     @MapsId
     private User user;
 
+    private String fullName;
+
     private String shopName;
 
     private String shopDescription;
@@ -33,5 +35,9 @@ public class Vendor {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @CreationTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
 }

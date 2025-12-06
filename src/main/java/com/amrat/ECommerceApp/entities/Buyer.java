@@ -25,8 +25,6 @@ public class Buyer {
 
     private String contact;
 
-    private String address;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
