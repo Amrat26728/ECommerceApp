@@ -18,7 +18,7 @@ public class Product {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Vendor vendor;
+    private Seller seller;
 
     private String name;
 

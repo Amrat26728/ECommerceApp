@@ -23,7 +23,7 @@ public class Order {
     private Buyer buyer;
 
     @ManyToOne
-    private Vendor vendorId;
+    private Seller sellerId;
 
     private OrderStatus status;
 
