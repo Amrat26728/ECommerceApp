@@ -20,8 +20,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User createUser(SellerSignupRequestDto sellerSignupRequestDto){
-        User user = userRepository.findByUsername(sellerSignupRequestDto.getUsername()).orElse(null);
+    public User createUser(String username, String password, Role role){
+        User user = userRepository.findByUsername(username).orElse(null);
 
         System.out.println(user);
 
@@ -30,13 +30,13 @@ public class UserService {
         }
 
         Set<Role> roles = new HashSet<>();
-        roles.add(Role.SELLER);
+        roles.add(role);
 
-        if (sellerSignupRequestDto.getPassword().isEmpty()){
+        if (password.isEmpty()){
             throw new IllegalArgumentException("Password is required.");
         }
 
-        user = new User(sellerSignupRequestDto.getUsername(), passwordEncoder.encode(sellerSignupRequestDto.getPassword()), roles);
+        user = new User(username, passwordEncoder.encode(password), roles);
         return userRepository.save(user);
     }
 

@@ -33,4 +33,10 @@ public class Buyer {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    public Buyer(User user, String fullName, String contact){
+        this.user = user;
+        this.fullName = fullName;
+        this.contact = contact;
+    }
+
 }
