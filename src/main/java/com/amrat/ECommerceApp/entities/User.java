@@ -13,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -75,4 +74,9 @@ public class User implements UserDetails {
         this.isVerified = false;
         this.isActive = false;
     }
+
+    public void verifyAccount(){
+        this.isVerified = true;
+    }
+
 }

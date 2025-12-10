@@ -1,6 +1,6 @@
 package com.amrat.ECommerceApp.services;
 
-import com.amrat.ECommerceApp.dtos.buyerdtos.BuyerSignupRequestDto;
+import com.amrat.ECommerceApp.dtos.buyer.BuyerSignupRequestDto;
 import com.amrat.ECommerceApp.entities.Buyer;
 import com.amrat.ECommerceApp.entities.User;
 import com.amrat.ECommerceApp.repositories.BuyerRepository;

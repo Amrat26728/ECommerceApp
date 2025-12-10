@@ -1,6 +1,6 @@
 package com.amrat.ECommerceApp.services;
 
-import com.amrat.ECommerceApp.dtos.sellerdtos.SellerSignupRequestDto;
+import com.amrat.ECommerceApp.dtos.seller.SellerSignupRequestDto;
 import com.amrat.ECommerceApp.entities.User;
 import com.amrat.ECommerceApp.entities.Seller;
 import com.amrat.ECommerceApp.repositories.SellerRepository;
@@ -27,4 +27,7 @@ public class SellerService {
         return sellerRepository.save(seller);
     }
 
+    public Seller getSeller(User user) {
+        return sellerRepository.findByUser(user).orElseThrow(() -> new IllegalArgumentException("Seller does not exist."));
+    }
 }

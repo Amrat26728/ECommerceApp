@@ -1,14 +1,12 @@
-package com.amrat.ECommerceApp.dtos.sellerdtos;
+package com.amrat.ECommerceApp.dtos.seller;
 
 import lombok.Data;
 
 @Data
-public class SellerSignupResponseDto {
+public class SellerSignupRequestDto {
 
-    private Long id;
     private String username;
     private String password;
-    private String role;
     private String fullName;
     private String shopName;
     private String shopDescription;

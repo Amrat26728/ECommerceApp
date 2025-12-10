@@ -1,4 +1,4 @@
-package com.amrat.ECommerceApp.dtos.buyerdtos;
+package com.amrat.ECommerceApp.dtos.buyer;
 
 import lombok.Data;
 

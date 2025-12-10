@@ -45,7 +45,7 @@ public class EmailService {
                     "<html><body>" +
                             "<h3>Welcome to Hospital Management System</h3>" +
                             "<p>Click the button below to verify your email address:</p>" +
-                            "<a href='http://your-verification-link/token?token={token}' " +
+                            "<a href='http://localhost:8080/auth/verify?token=" + token +  "' " +
                             "style='padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;'>" +
                             "Verify Email</a>" +
                             "</body></html>",

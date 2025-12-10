@@ -1,6 +1,5 @@
 package com.amrat.ECommerceApp.services;
 
-import com.amrat.ECommerceApp.dtos.sellerdtos.SellerSignupRequestDto;
 import com.amrat.ECommerceApp.entities.User;
 import com.amrat.ECommerceApp.entities.types.Role;
 import com.amrat.ECommerceApp.repositories.UserRepository;
@@ -23,8 +22,6 @@ public class UserService {
     public User createUser(String username, String password, Role role){
         User user = userRepository.findByUsername(username).orElse(null);
 
-        System.out.println(user);
-
         if (user != null){
             throw new IllegalArgumentException("User already exists.");
         }
@@ -38,6 +35,14 @@ public class UserService {
 
         user = new User(username, passwordEncoder.encode(password), roles);
         return userRepository.save(user);
+    }
+
+    public User getUser(String username){
+        return userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("User does not exist."));
+    }
+
+    public void save(User user){
+        userRepository.save(user);
     }
 
 }
