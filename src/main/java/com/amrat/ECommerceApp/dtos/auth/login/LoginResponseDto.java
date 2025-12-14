@@ -1,4 +1,4 @@
-package com.amrat.ECommerceApp.dtos.auth;
+package com.amrat.ECommerceApp.dtos.auth.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

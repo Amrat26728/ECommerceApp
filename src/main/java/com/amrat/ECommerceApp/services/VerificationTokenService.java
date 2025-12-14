@@ -21,7 +21,7 @@ public class VerificationTokenService {
     public String createVerificationToken(User user){
         String token = UUID.randomUUID().toString();
         String hashedToken = passwordEncoder.encode(token);
-        VerificationToken verificationToken = new VerificationToken(token, hashedToken, user, LocalDateTime.now().plusMinutes(30));
+        VerificationToken verificationToken = new VerificationToken(token, hashedToken, user, LocalDateTime.now().plusMinutes(5));
         verificationTokenRepository.save(verificationToken);
         return token;
     }

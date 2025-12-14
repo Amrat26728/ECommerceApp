@@ -28,7 +28,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/public/**", "/auth/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .requestMatchers("/buyer/**").hasRole(Role.BUYER.name())
-                        .requestMatchers("/vendor/**").hasRole(Role.SELLER.name())
+                        .requestMatchers("/seller/**").hasRole(Role.SELLER.name())
                         .requestMatchers("/authenticated/**").authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandlingConfigurer -> {

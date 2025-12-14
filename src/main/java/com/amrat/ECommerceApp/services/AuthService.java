@@ -1,9 +1,9 @@
 package com.amrat.ECommerceApp.services;
 
-import com.amrat.ECommerceApp.dtos.auth.LoginRequestDto;
-import com.amrat.ECommerceApp.dtos.auth.LoginResponseDto;
-import com.amrat.ECommerceApp.dtos.buyer.BuyerSignupRequestDto;
-import com.amrat.ECommerceApp.dtos.seller.SellerSignupRequestDto;
+import com.amrat.ECommerceApp.dtos.auth.login.LoginRequestDto;
+import com.amrat.ECommerceApp.dtos.auth.login.LoginResponseDto;
+import com.amrat.ECommerceApp.dtos.auth.signup.BuyerSignupRequestDto;
+import com.amrat.ECommerceApp.dtos.auth.signup.SellerSignupRequestDto;
 import com.amrat.ECommerceApp.entities.Buyer;
 import com.amrat.ECommerceApp.entities.User;
 import com.amrat.ECommerceApp.entities.Seller;
@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,7 @@ public class AuthService {
         User user = userService.createUser(sellerSignupRequestDto.getUsername(), sellerSignupRequestDto.getPassword(), Role.SELLER);
 
         // save seller info
-        Seller seller = sellerService.createVendor(user, sellerSignupRequestDto);
+        Seller seller = sellerService.createSeller(user, sellerSignupRequestDto);
 
         if (seller == null){
             throw new IllegalArgumentException("Seller could not created.");
@@ -110,7 +109,7 @@ public class AuthService {
             throw new IllegalArgumentException("Account is inactivated.");
         }
 
-        if (user.getRoles().contains(Role.SELLER)){
+        if (user.getRoles().contains(Role.SELLER.name())){
             Seller seller = sellerService.getSeller(user);
             if (seller.getStatus() == SellerStatus.PENDING){
                 throw new IllegalArgumentException("Your account is not verified yet.");
@@ -155,10 +154,9 @@ public class AuthService {
     }
 
     // resend user verification token
-    @Transactional
     public Map<String, String> resendVerificationToken(String email) {
 
-        User user = userService.getUser(email);
+        User user = userService.getUserByUsername(email);
 
         if (user.isVerified()) {
             throw new IllegalStateException("User already verified");
@@ -172,14 +170,9 @@ public class AuthService {
         }
 
         // Create new token
-        String token = UUID.randomUUID().toString();
-        String hashedToken = passwordEncoder.encode(token);
+        String newToken = verificationTokenService.createVerificationToken(user);
 
-        VerificationToken newToken = new VerificationToken(token, hashedToken, user, LocalDateTime.now().plusMinutes(30));
-
-        verificationTokenService.save(newToken);
-
-//        emailService.sendVerificationEmail(email, token);
+        emailService.sendVerificationEmail(email, newToken);
 
         return Map.of("message", "A verification link has been sent to your email.");
     }

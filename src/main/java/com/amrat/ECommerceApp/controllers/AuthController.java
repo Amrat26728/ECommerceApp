@@ -1,9 +1,10 @@
 package com.amrat.ECommerceApp.controllers;
 
-import com.amrat.ECommerceApp.dtos.auth.LoginRequestDto;
-import com.amrat.ECommerceApp.dtos.auth.LoginResponseDto;
-import com.amrat.ECommerceApp.dtos.buyer.BuyerSignupRequestDto;
-import com.amrat.ECommerceApp.dtos.seller.SellerSignupRequestDto;
+import com.amrat.ECommerceApp.dtos.auth.login.LoginRequestDto;
+import com.amrat.ECommerceApp.dtos.auth.login.LoginResponseDto;
+import com.amrat.ECommerceApp.dtos.auth.ResendVerificationTokenRequestDto;
+import com.amrat.ECommerceApp.dtos.auth.signup.BuyerSignupRequestDto;
+import com.amrat.ECommerceApp.dtos.auth.signup.SellerSignupRequestDto;
 import com.amrat.ECommerceApp.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,9 +34,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(loginRequestDto));
     }
 
-    @PostMapping("/verify")
+    @GetMapping("/verify")
     public ResponseEntity<Map<String, String>> verify(@RequestParam String token){
         return ResponseEntity.ok(authService.verify(token));
+    }
+
+    @PostMapping("/resend-verification-token")
+    public ResponseEntity<Map<String, String>> resendVerificationToken(@RequestBody ResendVerificationTokenRequestDto resendVerificationTokenRequestDto){
+        return ResponseEntity.ok(authService.resendVerificationToken(resendVerificationTokenRequestDto.getEmail()));
     }
 
 }

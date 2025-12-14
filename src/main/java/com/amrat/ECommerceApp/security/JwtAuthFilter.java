@@ -1,7 +1,7 @@
 package com.amrat.ECommerceApp.security;
 
 import com.amrat.ECommerceApp.entities.User;
-import com.amrat.ECommerceApp.repositories.UserRepository;
+import com.amrat.ECommerceApp.services.UserService;
 import com.amrat.ECommerceApp.util.AuthUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,7 +22,7 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final AuthUtil authUtil;
 
     private final HandlerExceptionResolver handlerExceptionResolver;
@@ -45,7 +45,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // username should not be null and security context should be null
             // every filter has to fill security context
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
-                User user = userRepository.findByUsername(username).orElseThrow();
+                User user = userService.getUserByUsername(username);
 
                 if (!user.isVerified()){
                     throw new IllegalArgumentException("Account is not verified.");
