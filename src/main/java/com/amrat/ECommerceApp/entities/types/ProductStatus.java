@@ -8,4 +8,5 @@ public enum ProductStatus {
     PENDING_APPROVAL,
     REJECTED,
     DISCONTINUED,
+    DELETED,
 }

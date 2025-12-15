@@ -1,6 +1,6 @@
 package com.amrat.ECommerceApp.controllers;
 
-import com.amrat.ECommerceApp.dtos.category.AddCategoryResponseDto;
+import com.amrat.ECommerceApp.dtos.category.CategoryResponseDto;
 import com.amrat.ECommerceApp.dtos.product.AddProductRequestDto;
 import com.amrat.ECommerceApp.services.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class AdminController {
     private final CategoryService categoryService;
 
     @PostMapping("/categories")
-    public ResponseEntity<AddCategoryResponseDto> addCategory(@RequestBody AddProductRequestDto addProductRequestDto){
+    public ResponseEntity<CategoryResponseDto> addCategory(@RequestBody AddProductRequestDto addProductRequestDto){
         return ResponseEntity.ok(categoryService.addCategory(addProductRequestDto));
     }
 

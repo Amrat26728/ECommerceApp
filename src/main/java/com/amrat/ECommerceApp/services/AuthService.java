@@ -58,7 +58,7 @@ public class AuthService {
 
         System.out.println(token);
 
-        emailService.sendVerificationEmail(sellerSignupRequestDto.getUsername(), token);
+//        emailService.sendVerificationEmail(sellerSignupRequestDto.getUsername(), token);
 
         return Map.of("message", "Verification link has been sent to your email.");
     }
@@ -83,7 +83,7 @@ public class AuthService {
             throw new IllegalArgumentException("Something wrong happened. try again.");
         }
 
-        emailService.sendVerificationEmail(buyerSignupRequestDto.getUsername(), token);
+//        emailService.sendVerificationEmail(buyerSignupRequestDto.getUsername(), token);
 
         return Map.of("message", "Verification link has been sent to your email.");
     }
