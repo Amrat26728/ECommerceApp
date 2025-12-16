@@ -50,4 +50,9 @@ public class Seller {
         this.status = SellerStatus.PENDING;
     }
 
+    public void updateSeller(String contact, String shopDescription) {
+        this.contact = contact;
+        this.shopDescription = shopDescription;
+    }
+
 }

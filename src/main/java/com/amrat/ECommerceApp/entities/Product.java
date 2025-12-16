@@ -13,6 +13,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,7 +25,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Seller seller;
 
@@ -39,12 +40,15 @@ public class Product {
     @Column(nullable = false)
     private Long stock;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Category category;
 
 //    @Type(ListArrayType.class)
     @Column(columnDefinition = "text[]")
     private List<String> imageUrls;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductAttribute> attributes = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private ProductStatus status;
@@ -81,6 +85,11 @@ public class Product {
 
     public void saveImagesStatus(ProductImageStatus imagesStatus){
         this.imagesStatus = imagesStatus;
+    }
+
+    public void addAttribute(ProductAttribute productAttribute) {
+        this.attributes.add(productAttribute);
+        productAttribute.saveProduct(this); // maintain bidirectional consistency
     }
 
 }

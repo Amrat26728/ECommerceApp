@@ -8,6 +8,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ProductAttributeService {
 
-    private ProductAttributeRepository productAttributeRepository;
+    private final ProductAttributeRepository productAttributeRepository;
 
 }

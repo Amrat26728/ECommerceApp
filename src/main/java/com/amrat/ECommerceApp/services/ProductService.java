@@ -3,11 +3,9 @@ package com.amrat.ECommerceApp.services;
 import com.amrat.ECommerceApp.dtos.pageable.ProductPageResponseDto;
 import com.amrat.ECommerceApp.dtos.product.AddProductRequestDto;
 import com.amrat.ECommerceApp.dtos.product.AddProductResponseDto;
+import com.amrat.ECommerceApp.dtos.product.ProductDetailsDto;
 import com.amrat.ECommerceApp.dtos.product.ProductDto;
-import com.amrat.ECommerceApp.entities.Category;
-import com.amrat.ECommerceApp.entities.Product;
-import com.amrat.ECommerceApp.entities.Seller;
-import com.amrat.ECommerceApp.entities.User;
+import com.amrat.ECommerceApp.entities.*;
 import com.amrat.ECommerceApp.entities.types.ProductImageStatus;
 import com.amrat.ECommerceApp.entities.types.ProductStatus;
 import com.amrat.ECommerceApp.entities.types.SellerStatus;
@@ -15,6 +13,7 @@ import com.amrat.ECommerceApp.repositories.ProductRepository;
 import com.amrat.ECommerceApp.util.CurrentUserUtils;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +33,7 @@ public class ProductService {
     private final SellerService sellerService;
     private final CurrentUserUtils currentUserUtils;
     private final CloudinaryService cloudinaryService;
-
-    public void save(Product product){
-        productRepository.save(product);
-    }
+    private final ModelMapper modelMapper;
 
     // add product
     @Transactional
@@ -46,16 +43,7 @@ public class ProductService {
         if (!seller.getStatus().equals(SellerStatus.VERIFIED)) {
             throw new IllegalArgumentException("Seller is not verified");
         }
-        Product prod = new Product(
-                addProductRequestDto.getName(),
-                addProductRequestDto.getDescription(),
-                addProductRequestDto.getPrice(),
-                addProductRequestDto.getStock(),
-                ProductImageStatus.UPLOADING,
-                category,
-                ProductStatus.PENDING_APPROVAL,
-                seller
-        );
+        Product prod = makeProduct(addProductRequestDto, category, seller);
 
         Product product = productRepository.save(prod);
 
@@ -105,11 +93,45 @@ public class ProductService {
                 .build();
     }
 
+    // just make product and return
+    private static Product makeProduct(AddProductRequestDto addProductRequestDto, Category category, Seller seller) {
+        Product prod = new Product(
+                addProductRequestDto.getName(),
+                addProductRequestDto.getDescription(),
+                addProductRequestDto.getPrice(),
+                addProductRequestDto.getStock(),
+                ProductImageStatus.UPLOADING,
+                category,
+                ProductStatus.PENDING_APPROVAL,
+                seller
+        );
+
+        if (addProductRequestDto.getAttributes() != null && !addProductRequestDto.getAttributes().isEmpty()) {
+            Map<String, String> productAttributes = addProductRequestDto.getAttributes();
+            productAttributes.forEach((key, value) -> {
+                prod.addAttribute(new ProductAttribute(prod, key, value));
+            });
+        }
+
+        return prod;
+    }
+
+    // get product details
+    public ProductDetailsDto getProductDetails(Long productId){
+        Product product = productRepository.findById(productId).orElseThrow(() -> new EntityNotFoundException("Product does not exist."));
+        if (!product.getStatus().equals(ProductStatus.ACTIVE)){
+            throw new IllegalArgumentException("Product is not available right now.");
+        }
+
+        return modelMapper.map(product, ProductDetailsDto.class);
+    }
+
+    // get product by id
     public Product getProduct(Long productId){
         return productRepository.findById(productId).orElseThrow(() -> new IllegalArgumentException("Product does not exist."));
     }
 
-    // delete product
+    // delete product by id
     @Transactional
     public void deleteProduct(Long productId) throws AccessDeniedException {
         Product product = getProduct(productId);
@@ -133,11 +155,9 @@ public class ProductService {
         Page<ProductDto> productDtoPage = products.map(product -> ProductDto.builder()
                 .id(product.getId())
                 .name(product.getName())
-                .description(product.getDescription())
                 .price(product.getPrice())
                 .stock(product.getStock())
                 .category(product.getCategory().getName())
-                .status(product.getStatus())
                 .imageUrls(product.getImageUrls())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())

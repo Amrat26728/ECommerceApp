@@ -21,4 +21,14 @@ public class ProductAttribute {
 
     private String attributeValue;
 
+    public ProductAttribute(Product product, String attributeName, String attributeValue) {
+        this.product = product;
+        this.attributeName = attributeName;
+        this.attributeValue = attributeValue;
+    }
+
+    public void saveProduct(Product product){
+        this.product = product;
+    }
+
 }
