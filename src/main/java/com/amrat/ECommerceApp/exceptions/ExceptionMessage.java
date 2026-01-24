@@ -1,4 +1,4 @@
-package com.amrat.HospitalManagementApp.exceptions;
+package com.amrat.ECommerceApp.exceptions;
 
 import lombok.Data;
 

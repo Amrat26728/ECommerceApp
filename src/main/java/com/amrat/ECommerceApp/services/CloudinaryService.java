@@ -21,7 +21,7 @@ public class CloudinaryService {
     private final Cloudinary cloudinary;
 
     @Async
-    public CompletableFuture<List<String>> uploadFilesAsync(List<byte[]> files, String folder) {
+    public CompletableFuture<List<String>> uploadFilesAsync(List<byte[]> files, List<byte[]> primaryImage, String folder) {
         System.out.println("Inside uploadFilesAsync");
         List<String> urls = uploadFiles(files, folder);
         return CompletableFuture.completedFuture(urls);

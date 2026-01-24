@@ -17,6 +17,7 @@ public class AdminController {
 
     private final CategoryService categoryService;
 
+    // add category
     @PostMapping("/categories")
     public ResponseEntity<CategoryResponseDto> addCategory(@RequestBody AddProductRequestDto addProductRequestDto){
         return ResponseEntity.ok(categoryService.addCategory(addProductRequestDto));

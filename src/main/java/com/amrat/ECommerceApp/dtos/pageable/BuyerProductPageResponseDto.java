@@ -1,6 +1,6 @@
 package com.amrat.ECommerceApp.dtos.pageable;
 
-import com.amrat.ECommerceApp.dtos.product.ProductDto;
+import com.amrat.ECommerceApp.dtos.product.BuyerProductCardDto;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,8 +8,8 @@ import java.util.List;
 
 @Data
 @Builder
-public class ProductPageResponseDto {
-    private List<ProductDto> content;
+public class BuyerProductPageResponseDto {
+    private List<BuyerProductCardDto> content;
     private int pageNumber;
     private int pageSize;
     private int numberOfElements;

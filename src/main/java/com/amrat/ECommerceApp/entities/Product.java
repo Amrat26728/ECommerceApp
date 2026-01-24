@@ -2,14 +2,14 @@ package com.amrat.ECommerceApp.entities;
 
 import com.amrat.ECommerceApp.entities.types.ProductImageStatus;
 import com.amrat.ECommerceApp.entities.types.ProductStatus;
-//import com.vladmihalcea.hibernate.type.array.ListArrayType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,7 +43,10 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     private Category category;
 
+    private String primaryImageUrl;
+
 //    @Type(ListArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(columnDefinition = "text[]")
     private List<String> imageUrls;
 

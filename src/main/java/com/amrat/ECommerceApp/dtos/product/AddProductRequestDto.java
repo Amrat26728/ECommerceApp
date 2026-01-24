@@ -15,7 +15,6 @@ public class AddProductRequestDto {
     private BigDecimal price;
     private Long stock;
     private Map<String, String> attributes;
-    private Long sellerId;
     private Long categoryId;
 
 }

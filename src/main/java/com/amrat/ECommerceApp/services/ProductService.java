@@ -1,18 +1,27 @@
 package com.amrat.ECommerceApp.services;
 
-import com.amrat.ECommerceApp.dtos.pageable.ProductPageResponseDto;
-import com.amrat.ECommerceApp.dtos.product.AddProductRequestDto;
-import com.amrat.ECommerceApp.dtos.product.AddProductResponseDto;
-import com.amrat.ECommerceApp.dtos.product.ProductDetailsDto;
-import com.amrat.ECommerceApp.dtos.product.ProductDto;
+import com.amrat.ECommerceApp.dtos.pageable.BuyerProductPageResponseDto;
+import com.amrat.ECommerceApp.dtos.pageable.SellerProductPageResponseDto;
+import com.amrat.ECommerceApp.dtos.product.*;
 import com.amrat.ECommerceApp.entities.*;
 import com.amrat.ECommerceApp.entities.types.ProductImageStatus;
 import com.amrat.ECommerceApp.entities.types.ProductStatus;
+import com.amrat.ECommerceApp.entities.types.Role;
 import com.amrat.ECommerceApp.entities.types.SellerStatus;
+import com.amrat.ECommerceApp.projections.BuyerProductCardProjection;
+import com.amrat.ECommerceApp.projections.BuyerProductProjection;
+import com.amrat.ECommerceApp.projections.PublicProductCardProjection;
+import com.amrat.ECommerceApp.projections.PublicProductProjection;
 import com.amrat.ECommerceApp.repositories.ProductRepository;
 import com.amrat.ECommerceApp.util.CurrentUserUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,9 +29,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.math.BigDecimal;
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,10 +51,11 @@ public class ProductService {
     private final CurrentUserUtils currentUserUtils;
     private final CloudinaryService cloudinaryService;
     private final ModelMapper modelMapper;
+    private final ProductAttributeService productAttributeService;
 
     // add product
     @Transactional
-    public AddProductResponseDto addProduct(AddProductRequestDto addProductRequestDto, List<MultipartFile> images){
+    public AddProductResponseDto addProduct(AddProductRequestDto addProductRequestDto, List<MultipartFile> images, MultipartFile primaryImage) throws IOException {
         Category category = categoryService.getCategory(addProductRequestDto.getCategoryId());
         Seller seller = sellerService.getSeller(currentUserUtils.getCurrentUser());
         if (!seller.getStatus().equals(SellerStatus.VERIFIED)) {
@@ -67,7 +85,9 @@ public class ProductService {
                     }
                 })
                 .toList();
-        cloudinaryService.uploadFilesAsync(imageBytes, "products/" + product.getId())
+        List<byte[]> primaryImageByte = new ArrayList<>();
+        primaryImageByte.add(primaryImage.getBytes());
+        cloudinaryService.uploadFilesAsync(imageBytes, primaryImageByte, "products/" + product.getId())
                 .thenAccept(urls -> {
                     product.saveImageUrls(urls);
                     product.saveImagesStatus(ProductImageStatus.UPLOADED);
@@ -116,14 +136,14 @@ public class ProductService {
         return prod;
     }
 
-    // get product details
-    public ProductDetailsDto getProductDetails(Long productId){
+    // get Buyer product details
+    public SellerProductDetailsDto getSellerProductDetails(Long productId){
         Product product = productRepository.findById(productId).orElseThrow(() -> new EntityNotFoundException("Product does not exist."));
-        if (!product.getStatus().equals(ProductStatus.ACTIVE)){
-            throw new IllegalArgumentException("Product is not available right now.");
+        User user = currentUserUtils.getCurrentUser();
+        if (user != null && user.getRoles().contains(Role.SELLER) && !product.getSeller().getUser().equals(user)) {
+            throw new IllegalArgumentException("This product does not belong to you.");
         }
-
-        return modelMapper.map(product, ProductDetailsDto.class);
+        return modelMapper.map(product, SellerProductDetailsDto.class);
     }
 
     // get product by id
@@ -147,23 +167,20 @@ public class ProductService {
     }
 
     // seller's products
-    public ProductPageResponseDto getProducts(Integer pageNumber){
+    public SellerProductPageResponseDto getSellersProducts(Integer pageNumber){
         int safePageNumber = (pageNumber != null && pageNumber >= 0) ? pageNumber : 0;
         User user = currentUserUtils.getCurrentUser();
         Seller seller = sellerService.getSeller(user);
-        Page<Product> products = productRepository.findBySellerAndStatusNot(seller, ProductStatus.DELETED, PageRequest.of(safePageNumber, 10));
-        Page<ProductDto> productDtoPage = products.map(product -> ProductDto.builder()
+        Page<Product> products = productRepository.findBySeller(seller, PageRequest.of(safePageNumber, 10));
+        Page<SellerProductCardDto> productDtoPage = products.map(product -> SellerProductCardDto.builder()
                 .id(product.getId())
                 .name(product.getName())
+                .imageUrl(product.getPrimaryImageUrl())
                 .price(product.getPrice())
                 .stock(product.getStock())
-                .category(product.getCategory().getName())
-                .imageUrls(product.getImageUrls())
-                .createdAt(product.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
                 .build());
 
-        return ProductPageResponseDto.builder()
+        return SellerProductPageResponseDto.builder()
                 .content(productDtoPage.getContent())
                 .isLast(productDtoPage.isLast())
                 .isFirst(productDtoPage.isFirst())
@@ -173,6 +190,212 @@ public class ProductService {
                 .totalElements(productDtoPage.getTotalElements())
                 .totalPages(productDtoPage.getTotalPages())
                 .build();
+    }
+
+    // public products
+    public BuyerProductPageResponseDto publicProducts(Integer pageNumber) {
+        int safePageNumber = (pageNumber != null && pageNumber >= 0) ? pageNumber : 0;
+        Page<PublicProductCardProjection> products = productRepository.findByStatus(ProductStatus.ACTIVE.name(), PageRequest.of(safePageNumber, 10));
+        List<BuyerProductCardDto> productsList = products.map(product -> BuyerProductCardDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .isInCart(false)
+                .isInWishlist(false)
+                .sellerId(product.getSellerId())
+                .sellerName(product.getSellerName())
+                .imageUrl(product.getImageUrl())
+                .categoryId(product.getCategoryId())
+                .categoryName(product.getCategoryName())
+                .build()).toList();
+        return BuyerProductPageResponseDto.builder()
+                .content(productsList)
+                .isFirst(products.isFirst())
+                .isLast(products.isLast())
+                .numberOfElements(products.getNumberOfElements())
+                .pageNumber(products.getNumber())
+                .pageSize(products.getSize())
+                .totalElements(products.getTotalElements())
+                .totalPages(products.getTotalPages())
+                .build();
+    }
+
+    // logged-in user products
+    public BuyerProductPageResponseDto buyerProducts(Integer pageNumber) {
+        int safePageNumber = (pageNumber != null && pageNumber >= 0) ? pageNumber : 0;
+        User user = currentUserUtils.getCurrentUser();
+        Page<BuyerProductCardProjection> products = productRepository.getProductsWithWishlistAndCart(ProductStatus.ACTIVE.name(), user.getId(), PageRequest.of(safePageNumber, 10));
+        List<BuyerProductCardDto> productsList = products.map(product -> BuyerProductCardDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .imageUrl(product.getPrimaryImageUrl())
+                .sellerId(product.getSellerId())
+                .sellerName(product.getSellerName())
+                .categoryId(product.getCategoryId())
+                .categoryName(product.getCategoryName())
+                .isInCart(product.getIsInCart())
+                .isInWishlist(product.getIsInWishlist())
+                .build()).toList();
+        return BuyerProductPageResponseDto.builder()
+                .content(productsList)
+                .isFirst(products.isFirst())
+                .isLast(products.isLast())
+                .numberOfElements(products.getNumberOfElements())
+                .pageNumber(products.getNumber())
+                .pageSize(products.getSize())
+                .totalElements(products.getTotalElements())
+                .totalPages(products.getTotalPages())
+                .build();
+    }
+
+    // public product details
+    public BuyerProductDetailsDto getPublicProductDetails(Long productId) throws JsonProcessingException {
+        // attributes returned by query is in string
+        PublicProductProjection product = productRepository.findPublicProductByIdAndStatus(productId, ProductStatus.ACTIVE.name()).orElseThrow(() -> new IllegalArgumentException("Product does not exist."));
+        // convert attributes into Map
+        ObjectMapper mapper = new ObjectMapper();
+        List<Map<String, String>> list = mapper.readValue(
+                product.getAttributes(),
+                new TypeReference<List<Map<String, String>>>() {}
+        );
+        Map<String, String> attributes = list.stream()
+                .collect(Collectors.toMap(
+                        m -> (String) m.get("name"),
+                        m -> String.valueOf(m.get("value")),
+                        (existing, replacement) -> existing   // keep first
+                ));
+        return BuyerProductDetailsDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .description(product.getDescription())
+                .isInStock(product.getStock() > 0)
+                .isInCart(false)
+                .isInWishlist(false)
+                .primaryImageUrl(product.getPrimaryImageUrl())
+                .sellerId(product.getSellerId())
+                .sellerName(product.getSellerName())
+                .categoryId(product.getCategoryId())
+                .categoryName(product.getCategoryName())
+                .imageUrls(product.getImageUrls())
+                .attributes(attributes)
+                .build();
+    }
+
+    // logged in product details
+    public BuyerProductDetailsDto getProductDetails(Long productId) throws JsonProcessingException {
+        User user = currentUserUtils.getCurrentUser();
+        // attributes returned by query is in string
+        BuyerProductProjection product = productRepository.findProductWishlistAndCart(productId, user.getId(), ProductStatus.ACTIVE.name()).orElseThrow(() -> new IllegalArgumentException("Product does not exist."));
+        // convert attributes into Map
+        ObjectMapper mapper = new ObjectMapper();
+        List<Map<String, String>> list = mapper.readValue(
+                product.getAttributes(),
+                new TypeReference<List<Map<String, String>>>() {}
+        );
+        Map<String, String> attributes = list.stream()
+                .collect(Collectors.toMap(
+                        m -> (String) m.get("name"),
+                        m -> String.valueOf(m.get("value")),
+                        (existing, replacement) -> existing   // keep first
+                ));
+        return BuyerProductDetailsDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .description(product.getDescription())
+                .isInStock(product.getStock() > 0)
+                .isInCart(product.getIsInCart())
+                .isInWishlist(product.getIsInWishlist())
+                .primaryImageUrl(product.getPrimaryImageUrl())
+                .sellerId(product.getSellerId())
+                .sellerName(product.getSellerName())
+                .categoryId(product.getCategoryId())
+                .categoryName(product.getCategoryName())
+                .imageUrls(product.getImageUrls())
+                .attributes(attributes)
+                .build();
+    }
+
+
+
+    //////// read products from .csv file
+    public void addProducts(){
+        try (Reader reader = new FileReader("products_3001_4000.csv");
+             CSVParser csvParser = new CSVParser(
+                     reader,
+                     CSVFormat.DEFAULT.withFirstRecordAsHeader().withTrim()
+             )) {
+            for (CSVRecord record : csvParser) {
+                List<String> product = new ArrayList<>();
+                product.add(record.get("id"));
+                product.add(record.get("name"));
+                product.add(record.get("description"));
+                product.add(record.get("price"));
+                product.add(record.get("stock"));
+                product.add(record.get("category_id"));
+                addProduct2(product);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read CSV file", e);
+        }
+
+        long start = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
+        System.out.println("Products added.");
+        addProductsAttributes();
+        System.out.println("Attributes added.");
+        long end = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond();
+        long timeTook = end-start;
+        System.out.println("Time took: "+timeTook);
+    }
+
+    public void addProduct2(List<String> product){
+        Category category = categoryService.getCategory(Long.parseLong(product.get(5)));
+        Seller seller = sellerService.getSeller(currentUserUtils.getCurrentUser());
+        if (!seller.getStatus().equals(SellerStatus.VERIFIED)) {
+            throw new IllegalArgumentException("Seller is not verified");
+        }
+        Product prod = makeProduct2(product, category, seller);
+
+        Product p = productRepository.save(prod);
+        p.saveImageUrls(new ArrayList<>());
+        productRepository.save(p);
+    }
+
+    // just make product and return
+    private static Product makeProduct2(List<String> product, Category category, Seller seller) {
+        return new Product(
+                product.get(1),
+                product.get(2),
+                new BigDecimal(product.get(3)),
+                Long.parseLong(product.get(4)),
+                ProductImageStatus.UPLOADED,
+                category,
+                ProductStatus.ACTIVE,
+                seller
+        );
+    }
+
+    public void addProductsAttributes() {
+        int count = 0;
+        try (Reader reader = new FileReader("product_attributes_3001_4000.csv");
+             CSVParser csvParser = new CSVParser(
+                     reader,
+                     CSVFormat.DEFAULT.withFirstRecordAsHeader().withTrim()
+             )) {
+            Product prod = null;
+            for (CSVRecord record : csvParser) {
+                if (prod == null || prod.getId() != Long.parseLong(record.get("product_id"))) {
+                    prod = productRepository.findById(Long.parseLong(record.get("product_id"))).orElse(null);
+                }
+                productAttributeService.addAttribute(record.get("attribute_title"), record.get("attribute_value"), prod);
+                count++;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read CSV file", e);
+        }
+        System.out.println(count);
     }
 
 }

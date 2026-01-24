@@ -1,10 +1,15 @@
 package com.amrat.ECommerceApp.entities;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Entity
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CartItem {
 
     @Id
@@ -14,13 +19,26 @@ public class CartItem {
     @ManyToOne(fetch = FetchType.LAZY)
     private Cart cart;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Product product;
 
-    private Double price;
+    private BigDecimal price;
 
-    private Integer quantity;
+    private Long quantity;
 
-    private Double totalAmount;
+    private BigDecimal totalPrice;
+
+    public CartItem(Cart cart, Product product, BigDecimal price) {
+        this.cart = cart;
+        this.product = product;
+        this.price = price;
+        this.quantity = 1L;
+        this.totalPrice = price;
+    }
+
+    public void changeQuantity(Long quantity) {
+        this.quantity = quantity;
+        this.totalPrice = this.price.multiply(BigDecimal.valueOf(quantity));
+    }
 
 }

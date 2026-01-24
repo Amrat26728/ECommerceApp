@@ -25,9 +25,8 @@ public class WebSecurityConfig {
                 csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**", "/auth/**").permitAll()
+                        .requestMatchers("/api/v1/**", "/auth/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers("/buyer/**").hasRole(Role.BUYER.name())
                         .requestMatchers("/seller/**").hasRole(Role.SELLER.name())
                         .requestMatchers("/authenticated/**").authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
